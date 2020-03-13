@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Prompt } from 'react-router-dom';
 import CourseForm from './CourseForm';
-import * as courseApi from '../api/courseApi';
+//import * as courseApi from '../api/courseApi';
+import courseStore from "../stores/courseStore";
+import * as courseActions from "../actions/courseActions";
 import { toast } from 'react-toastify';
 
 
@@ -9,7 +11,9 @@ import { toast } from 'react-toastify';
 const ManageCoursePage = (props) => {
     // debugger;
 
-    const [errors, setErrors] = useState({});
+	const [errors, setErrors] = useState({});
+	
+	const [ courses, setCourses] = useState(courseStore.getCourses());
 
     const [course, setCourse] = useState({
         id: null,
@@ -20,16 +24,35 @@ const ManageCoursePage = (props) => {
     });
 
 
-    useEffect( () => {
-        const slug = props.match.params.slug;   // From the path `/course/:slug`
 
-        if (slug)
+    useEffect( () => {
+		courseStore.addChangeListener(onChange);
+		
+		const slug = props.match.params.slug;   // From the path `/course/:slug`
+		
+		if (courses.length === 0)
+		{
+			courseActions.loadCourses();
+		}
+        else if (slug)
         {
-            courseApi.getCourseBySlug(slug).then((_course) => {
-                setCourse(_course);
-            });
-        }
-    }, [props.match.params.slug]);
+            // courseApi.getCourseBySlug(slug).then((_course) => {
+            //     setCourse(_course);
+			// });
+
+			setCourse(courseStore.getCourseBySlug(slug));
+		}
+		
+		return () => courseStore.removeChangeListener(onChange);	// cleanup on unmount
+    }, [courses.length, props.match.params.slug]);
+
+
+
+	function onChange()
+	{
+		setCourses(courseStore.getCourses());
+	}
+
 
     function handleChange(event) {
         // const updatedCourse = {...course};
@@ -71,9 +94,14 @@ const ManageCoursePage = (props) => {
 
         if (formIsValid() === false) return; // Invalid
 
-        // console.log("handleSubmit(): course=", course);
+        console.log("handleSubmit(): course=", course);
 
-        courseApi.saveCourse(course).then( () => {
+        // courseApi.saveCourse(course).then( () => {
+        //     props.history.push("/courses");
+        //     toast.success("Course saved.");
+		// });   // Pass the course that's held in state.
+		
+		courseActions.saveCourse(course).then( () => {
             props.history.push("/courses");
             toast.success("Course saved.");
         });   // Pass the course that's held in state.
