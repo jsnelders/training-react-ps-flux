@@ -1,3 +1,7 @@
+20 July 2021: Respository is now obsolete and archived.
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
